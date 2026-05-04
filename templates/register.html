@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Register</title>
+    <link rel="stylesheet" href="../static/register.css" />
+  </head>
+  <body>
+
+    {% for m in get_flashed_messages() %}
+      <script>
+        alert("{{ m }}");
+      </script>
+    {% endfor %}
+
+    <main class="page">
+      <section class="register-card" aria-labelledby="register-title">
+        <h1 id="register-title">Create Your Account</h1>
+        <p class="subtitle">Join us by filling in your details below.</p>
+
+        <form class="register-form" action="/register" method="post">
+          <div class="input-group">
+            <label for="name">Full Name</label>
+            <input id="name" name="name" type="text" placeholder="John Doe" required />
+          </div>
+
+          <div class="input-group">
+            <label for="email">Email Address</label>
+            <input id="email" name="email" type="email" placeholder="name@example.com" required />
+          </div>
+
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Minimum 8 characters" minlength="8" required />
+          </div>
+
+          <label class="check-row" for="remember">
+            <input id="remember" type="checkbox" />
+            Remember me
+          </label>
+
+          <button type="submit">Create Account</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

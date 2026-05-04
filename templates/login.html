@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="../static/login.css" />
+  </head>
+  <body>
+
+    {% for m in get_flashed_messages() %}
+      <script>
+        alert("{{ m }}");
+      </script>
+    {% endfor %}
+
+    <main class="page">
+      <section class="login-card" aria-labelledby="login-title">
+        <h1 id="login-title">Welcome Back</h1>
+        <p class="subtitle">Please enter your credentials to log in.</p>
+
+        <form class="login-form" action="/login" method="post">
+          <div class="input-group">
+            <label for="login-email">Email Address</label>
+            <input id="login-email" name="email" type="email" placeholder="name@example.com" required />
+          </div>
+
+          <div class="input-group">
+            <label for="login-password">Password</label>
+            <input id="login-password" name="password" type="password" placeholder="Enter your password" required />
+          </div>
+
+          <div class="login-actions">
+            <label class="check-row" for="remember-me">
+              <input id="remember-me" type="checkbox" />
+              Remember me
+            </label>
+            <a class="forgot-link" href="#">Forgot password?</a>
+          </div>
+
+          <button type="submit">Log In</button>
+        </form>
+
+        <p class="register-direct">Don't have an account? <a href="/register">Register here</a></p>
+      </section>
+    </main>
+  </body>
+</html>

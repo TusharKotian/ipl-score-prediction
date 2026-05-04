@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IPL Score Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="../static/predict_style.css" rel="stylesheet">
+  </head>
+  <body>
+  {% if prediction %}
+    <h1 style="text-align: center;">Predicted Score: {{ prediction }}</h1>
+  {% endif %}
+    <div class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+          <div class="card shadow border-0 predictor-card">
+            <div class="card-body p-4 p-md-5">
+              <div class="predictor-header mb-4">
+                <span class="predictor-chip">Match Analytics</span>
+                <h1 class="h2 mb-2">IPL First Innings Score Predictor</h1>
+                <p class="text-muted mb-0">Enter current match details to estimate the final first-innings score.</p>
+              </div>
+
+              <form id="scorePredictForm" class="row g-3" action="/predict" method="post">
+                <div class="col-md-6">
+                  <label for="battingTeam" class="form-label">Batting Team</label>
+                  <select class="form-select" id="battingTeam" name="batting_team" required>
+                    <option value="" selected disabled>Select batting team</option>
+                    <option value="Chennai Super Kings">Chennai Super Kings</option>
+                    <option value="Delhi Daredevils">Delhi Daredevils</option>
+                    <option value="Kings XI Punjab">Kings XI Punjab</option>
+                    <option value="Kolkata Knight Riders">Kolkata Knight Riders</option>
+                    <option value="Mumbai Indians">Mumbai Indians</option>
+                    <option value="Rajasthan Royals">Rajasthan Royals</option>
+                    <option value="Royal Challengers Bangalore">Royal Challengers Bangalore</option>
+                    <option value="Sunrisers Hyderabad">Sunrisers Hyderabad</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="bowlingTeam" class="form-label">Bowling Team</label>
+                  <select class="form-select" id="bowlingTeam" name="bowling_team" required>
+                    <option value="" selected disabled>Select bowling team</option>
+                    <option value="Chennai Super Kings">Chennai Super Kings</option>
+                    <option value="Delhi Daredevils">Delhi Daredevils</option>
+                    <option value="Kings XI Punjab">Kings XI Punjab</option>
+                    <option value="Kolkata Knight Riders">Kolkata Knight Riders</option>
+                    <option value="Mumbai Indians">Mumbai Indians</option>
+                    <option value="Rajasthan Royals">Rajasthan Royals</option>
+                    <option value="Royal Challengers Bangalore">Royal Challengers Bangalore</option>
+                    <option value="Sunrisers Hyderabad">Sunrisers Hyderabad</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="overs" class="form-label">Overs Completed</label>
+                  <input type="text" class="form-control" id="overs" name="overs" inputmode="decimal" pattern="^(?:([5-9]|1[0-9])(?:\.[0-5])?|20(?:\.0)?)$" placeholder="e.g. 14.3 (balls 0-5)" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="runs" class="form-label">Current Runs</label>
+                  <input type="number" class="form-control" id="runs" name="runs" min="0" max="300" placeholder="e.g. 128" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="wickets" class="form-label">Wickets Fallen</label>
+                  <input type="number" class="form-control" id="wickets" name="wickets" min="0" max="10" placeholder="e.g. 4" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="runsLast5" class="form-label">Runs in Last 5 Overs</label>
+                  <input type="number" class="form-control" id="runsLast5" name="runs_last_5" min="0" max="120" placeholder="e.g. 42" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="wicketsLast5" class="form-label">Wickets in Last 5 Overs</label>
+                  <input type="number" class="form-control" id="wicketsLast5" name="wickets_last_5" min="0" max="10" placeholder="e.g. 2" required>
+                </div>
+
+                <div class="col-12 d-grid mt-2">
+                  <button type="submit" class="btn btn-primary btn-lg">Predict Score</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("scorePredictForm");
+      const battingTeam = document.getElementById("battingTeam");
+      const bowlingTeam = document.getElementById("bowlingTeam");
+      const oversInput = document.getElementById("overs");
+      const oversPattern = /^(?:([5-9]|1[0-9])(?:\.[0-5])?|20(?:\.0)?)$/;
+
+      function updateTeamOptions() {
+        const batValue = battingTeam.value;
+        const bowlValue = bowlingTeam.value;
+
+        [...battingTeam.options].forEach((option) => {
+          option.disabled = option.value !== "" && option.value === bowlValue;
+        });
+
+        [...bowlingTeam.options].forEach((option) => {
+          option.disabled = option.value !== "" && option.value === batValue;
+        });
+
+        battingTeam.setCustomValidity("");
+        bowlingTeam.setCustomValidity("");
+
+        if (batValue && bowlValue && batValue === bowlValue) {
+          battingTeam.setCustomValidity("Batting and bowling team cannot be the same.");
+          bowlingTeam.setCustomValidity("Batting and bowling team cannot be the same.");
+        }
+      }
+
+      function normalizeOvers(rawValue) {
+        const value = rawValue.trim();
+        if (!value || !/^\d+(?:\.\d+)?$/.test(value)) {
+          return value;
+        }
+
+        const parts = value.split(".");
+        let overs = parseInt(parts[0], 10);
+        let balls = parts.length > 1 ? parseInt(parts[1], 10) : 0;
+
+        if (Number.isNaN(overs) || Number.isNaN(balls)) {
+          return value;
+        }
+
+        if (balls >= 6) {
+          overs += Math.floor(balls / 6);
+          balls %= 6;
+        }
+
+        if (overs > 20 || (overs === 20 && balls > 0)) {
+          return "20.0";
+        }
+
+        if (overs < 5) {
+          return "5.0";
+        }
+
+        return `${overs}.${balls}`;
+      }
+
+      function validateOvers() {
+        oversInput.setCustomValidity("");
+        if (!oversPattern.test(oversInput.value)) {
+          oversInput.setCustomValidity("Use format like 14.3. Balls can only be 0 to 5.");
+        }
+      }
+
+      battingTeam.addEventListener("change", updateTeamOptions);
+      bowlingTeam.addEventListener("change", updateTeamOptions);
+
+      oversInput.addEventListener("input", () => {
+        oversInput.setCustomValidity("");
+      });
+
+      oversInput.addEventListener("blur", () => {
+        oversInput.value = normalizeOvers(oversInput.value);
+        validateOvers();
+      });
+
+      form.addEventListener("submit", (event) => {
+        updateTeamOptions();
+        oversInput.value = normalizeOvers(oversInput.value);
+        validateOvers();
+
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          form.reportValidity();
+        }
+      });
+
+      updateTeamOptions();
+    </script>
+  </body>
+</html>
