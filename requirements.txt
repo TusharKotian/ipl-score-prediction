@@ -43,3 +43,6 @@ itsdangerous==2.1.2
 
 python-dateutil==2.8.2
 pytz==2023.3
+
+setuptools==68.2.2
+wheel==0.41.2
